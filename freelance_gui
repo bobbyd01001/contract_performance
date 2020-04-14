@@ -1,0 +1,811 @@
+
+"""
+Copyright 2019 Beawit Consulting LLC
+
+Permission is hereby granted, free of charge,
+to any person obtaining a copy of this software
+and associated documentation files (the "Software"),
+to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Created by JC Beasley
+for questions contact beaswork@gmail.com
+this script takes input from use and creates csv of recorded user data and then
+gives you weather forecast of local city and also will calculate cost of travel to project
+destination. Then prints pie and bar chart of results"""
+
+from guizero import App, Text, TextBox, Window, PushButton, Picture, Combo, Box, info
+import os
+import pygal
+from bs4 import BeautifulSoup
+import pandas as pd
+from opencage.geocoder import OpenCageGeocode
+import time
+import requests
+from math import radians, sin, cos, acos
+import tkinter as tk  # module to create a GUI
+from PIL import ImageTk  # module to add a background picture
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+
+# Time Variable
+timestamp = time.asctime(time.localtime(time.time()))
+
+# State Variable
+washington_total = 0
+oregon_total = 0
+
+# Project Variables
+work_market_total = 0
+atlas_total = 0
+bwit_total = 0
+field_nation_total = 0
+ccs_total = 0
+on_force_total = 0
+techlink_total = 0
+
+# Monthly Variables
+jan_total = 0
+feb_total = 0
+mar_total = 0
+apr_total = 0
+may_total = 0
+jun_total = 0
+jul_total = 0
+aug_total = 0
+sep_total = 0
+oct_total = 0
+nov_total = 0
+dec_total = 0
+
+# Yearly Variables
+year_2019_total = 0
+year_2020_total = 0
+year_2021_total = 0
+year_2022_total = 0
+year_2023_total = 0
+year_2024_total = 0
+year_2025_total = 0
+year_2026_total = 0
+year_2027_total = 0
+year_2028_total = 0
+year_2029_total = 0
+year_2030_total = 0
+
+# paths to log files and recorded data
+contractor_log = "path to csv file"
+mileage_compensator = open("path to text file", "w")
+app_image = r'app_background_image.jpg'
+
+# sign up for your API key at https://opencagedata.com
+geo_key = 'geo-location API key'  # geo-location API key
+
+# sign up for a weather API key at http://api.openweathermap.org
+weather_key = "weather forecast API key"  # weather forecast API key
+
+# Generate yearly performance charts
+year_2019_log_path = 'path to 2019 csv file'
+year_2020_log_path = 'path to 2020 csv file'
+data_crawl = pd.read_csv(contractor_log)
+count_row = data_crawl.shape[0]
+
+year_2019_data_crawl = pd.read_csv(year_2019_log_path)
+year_2019_count_row = year_2019_data_crawl.shape[0]
+
+year_2020_data_crawl = pd.read_csv(year_2020_log_path)
+year_2020_count_row = year_2020_data_crawl.shape[0]
+
+
+def monthly_performance():
+    """Function to Generate monthly performance charts"""
+    global jan_total
+    global feb_total
+    global mar_total
+    global apr_total
+    global may_total
+    global jun_total
+    global jul_total
+    global aug_total
+    global sep_total
+    global oct_total
+    global nov_total
+    global dec_total
+    global name
+    with open(contractor_log) as name:
+        for line in data_crawl['DATE']:
+            jan_mon = line.find('Jan')
+            feb_mon = line.find('Feb')
+            mar_mon = line.find('Mar')
+            apr_mon = line.find('Apr')
+            may_mon = line.find('May')
+            jun_mon = line.find('Jun')
+            jul_mon = line.find('Jul')
+            aug_mon = line.find('Aug')
+            sep_mon = line.find('Sep')
+            oct_mon = line.find('Oct')
+            nov_mon = line.find('Nov')
+            dec_mon = line.find('Dec')
+            if jan_mon != -1 and jan_mon != 0:
+                jan_total += 1
+            elif feb_mon != -1 and feb_mon != 0:
+                feb_total += 1
+            elif mar_mon != -1 and mar_mon != 0:
+                mar_total += 1
+            elif apr_mon != -1 and apr_mon != 0:
+                apr_total += 1
+            elif may_mon != -1 and may_mon != 0:
+                may_total += 1
+            elif jun_mon != -1 and jun_mon != 0:
+                jun_total += 1
+            elif jul_mon != -1 and jul_mon != 0:
+                jul_total += 1
+            elif aug_mon != -1 and aug_mon != 0:
+                aug_total += 1
+            elif sep_mon != -1 and sep_mon != 0:
+                sep_total += 1
+            elif oct_mon != -1 and oct_mon != 0:
+                oct_total += 1
+            elif nov_mon != -1 and nov_mon != 0:
+                nov_total += 1
+            elif dec_mon != -1 and dec_mon != 0:
+                dec_total += 1
+    line_chart = pygal.Bar(title=u'MONTHLY PROJECT PERFOMANCE', x_title='2020', y_title='PROJECTS COMPLETED')
+    line_chart.x_labels = 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+    line_chart.add('JANUARY', [jan_total])
+    line_chart.add('FEBRUARY', [None, feb_total])
+    line_chart.add('MARCH', [None, None, mar_total])
+    line_chart.add('APRIL', [None, None, None, apr_total])
+    line_chart.add('MAY', [None, None, None, None, may_total])
+    line_chart.add('JUNE', [None, None, None, None, None, jun_total])
+    line_chart.add('JULY', [None, None, None, None, None, None, jul_total])
+    line_chart.add('AUGUST', [None, None, None, None, None, None, None, aug_total])
+    line_chart.add('SEPTEMBER', [None, None, None, None, None, None, None, None, sep_total])
+    line_chart.add('OCTOBER', [None, None, None, None, None, None, None, None, None, oct_total])
+    line_chart.add('NOVEMBER', [None, None, None, None, None, None, None, None, None, None, nov_total])
+    line_chart.add('DECEMBER', [None, None, None, None, None, None, None, None, None, None, None, dec_total])
+    line_chart.render_in_browser()
+
+
+# Functions
+"""function to create yearly project performance chart"""
+def yearly_performance():
+    year_2019()
+    year_2020()
+    line_chart = pygal.Bar(title=u'PROJECTS PERFOMANCE BY YEAR', x_title='Yearly Totals',
+                           y_title='TOTAL PROJECTS')
+    line_chart.x_labels = '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030'
+    line_chart.add('2019', [year_2019_total])
+    line_chart.add('2020', [None, year_2020_total])
+    line_chart.add('2021', [None, None, year_2021_total])
+    line_chart.add('2022', [None, None, None, year_2022_total])
+    line_chart.add('2023', [None, None, None, None, year_2023_total])
+    line_chart.add('2024', [None, None, None, None, None, year_2024_total])
+    line_chart.add('2025', [None, None, None, None, None, None, year_2025_total])
+    line_chart.add('2026', [None, None, None, None, None, None, None, year_2026_total])
+    line_chart.add('2027', [None, None, None, None, None, None, None, None, year_2027_total])
+    line_chart.add('2028', [None, None, None, None, None, None, None, None, None, year_2028_total])
+    line_chart.add('2029', [None, None, None, None, None, None, None, None, None, None, year_2029_total])
+    line_chart.add('2030', [None, None, None, None, None, None, None, None, None, None, None, year_2030_total])
+    line_chart.render_in_browser()
+
+
+def year_2019():
+"""function to get 2019 project performance total"""
+    global year_2019_total
+    global name
+    with open(year_2019_log_path) as name:
+        for line in year_2019_data_crawl['DATE']:
+            perf_year_2019 = line.find('2019')
+            if perf_year_2019 != -1 and perf_year_2019 != 0:
+                year_2019_total += 1
+
+
+def year_2020():
+"""function to get 2020 project performance total"""
+    global year_2020_total
+    global name
+    with open(year_2020_log_path) as name:
+        for line in year_2020_data_crawl['DATE']:
+            perf_year_2020 = line.find('2020')
+            if perf_year_2020 != -1 and perf_year_2020 != 0:
+                year_2020_total += 1
+
+
+# Generate subplot gui
+def subplot_charts():
+    root = tk.Tk()
+    root.title('Platform Chart Totals')
+
+    canvas1 = tk.Canvas(root, width=800, height=400)  # create the canvas (tkinter module)
+    canvas1.pack()
+
+    imagepath1 = app_image  # include the path for the image (use 'r' before the path string to address any special character such as '\'. Also, make sure to include the image type - here it is jpg)
+    image1 = ImageTk.PhotoImage(file=imagepath1)  # PIL module
+    canvas1.create_image(800, 400, image=image1)  # create a canvas image to place the background image
+
+    button1 = tk.Button(root, text='Exit Application', command=root.destroy)  # create an Exit button to close the main window
+    canvas1.create_window(85, 300, window=button1)  # create a canvas window to place the Exit Application button on top of the background image
+
+    entry1 = tk.Label(root)  # create 1st entry box
+    canvas1.create_window(100, 200, window=entry1)  # create a canvas window to place the 1st entry box on top of the background image
+
+    entry2 = tk.Label(root)  # create 2st entry box
+    canvas1.create_window(100, 220, window=entry2)  # create a canvas window to place the 2nd entry box on top of the background image
+
+    # entry3 = tk.Label(root)  # create 3st entry box
+    # canvas1.create_window(100, 240,
+    # window=entry3)  # create a canvas window to place the 3rd entry box on top of the background image
+
+    def insert_number():  # create a function/command to be called by the button (i.e., button2 below)
+        global x1  # add 'global' before the variable x1, so that you can use that variable outside of the command/function if ever needed
+        global x2  # add 'global' before the variable x2, so that you can use that variable outside of the command/function if ever needed
+        # global x3  # add 'global' before the variable x3, so that you can use that variable outside of the command/function if ever needed
+        x1 = float(oregon_total)
+        x2 = float(washington_total)
+        # x3 = float(work_market_total)
+        # create a bar chart once the variables x1, x2 and x3 are inserted by the user (and the user then clicks on button2 below)
+        figure1 = Figure(figsize=(5, 4), dpi=125)  # create a Figure (matplotlib module)
+        subplot1 = figure1.add_subplot(111)  # add a subplot
+        x_axis = ['OREGON', 'WASHINGTON']    # intakes the values inserted under x1, x2 and x3 to represent the x Axis
+        y_axis = [float(x1), float(x2)]  # intakes the values inserted under x1, x2 and x3 to represent the y Axis
+        subplot1.bar(x_axis, y_axis, color=('blue', 'orange'))  # create the bar chart based on the input variables x1, x2, and x3
+        bar1 = FigureCanvasTkAgg(figure1, root)  # create a canvas figure (matplotlib module)
+        bar1.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=0)
+
+        # create a pie chart once the variables x1, x2 and x3 are inserted by the user (and the user then clicks on button2 below)
+        figure2 = Figure(figsize=(5, 4), dpi=125)  # create a Figure (matplotlib module)
+        subplot2 = figure2.add_subplot(111)  # add a subplot
+        labels2 = 'OR', 'WA'  # add labels for each slice in the pie chart
+        pie_sizes = [float(x1), float(x2)]  # intakes the values inserted under x1, x2 and x3 to represent the pie slices
+        explode2 = (0, 0.1)  # explodes the 2nd slice (i.e. 'Label2')
+        subplot2.pie(pie_sizes, explode=explode2, labels=labels2, autopct='%1.1f%%', shadow=True, startangle=90)  # create the pie chart based on the input variables x1, x2, and x3
+        subplot2.axis('equal')  # Use equal to draw the pie chart as a circle
+        pie2 = FigureCanvasTkAgg(figure2, root)  # create a canvas figure (matplotlib module)
+        pie2.get_tk_widget().pack()
+
+    button2 = tk.Button(root, text='Click to Draw Chart ', command=insert_number)  # button to call the 'insert_number' command above
+    canvas1.create_window(97, 270, window=button2)  # create a canvas window to place button2 on top of the background image
+
+    root.mainloop()
+
+
+def vendor_performance():
+"""function to calculate performance total by vendor"""
+    global bwit_total
+    global ccs_total
+    global work_market_total
+    global field_nation_total
+    global atlas_total
+    global on_force_total
+    global techlink_total
+    labels = 'Work Market', 'Atlas', 'BWIT', 'CCS', 'Field Nation', 'OnForce', "Techlink"
+    with open(contractor_log) as f:
+        for line in f:
+            work_market = line.find('Work_Market')
+            atlas = line.find('Atlas')
+            bwit = line.find('BWIT')
+            field_nation = line.find('Field_Nation')
+            ccs = line.find('CCS')
+            tech_link = line.find('Techlink')
+            on_force = line.find('OnForce')
+            if work_market != -1 and work_market != 0:
+                work_market_total += 1
+            elif atlas != -1 and atlas != 0:
+                atlas_total += 1
+            elif field_nation != -1 and field_nation != 0:
+                field_nation_total += 1
+            elif ccs != -1 and ccs != 0:
+                ccs_total += 1
+            elif on_force != -1 and on_force != 0:
+                on_force_total += 1
+            elif tech_link != -1 and tech_link != 0:
+                techlink_total += 1
+            elif bwit != -1 and bwit != 0:
+                bwit_total += 1
+    pie_chart = pygal.Bar(title=u'PROJECT PERFORMANCE BY VENDOR', x_title='VENDORS', y_title='NUMBER OF PROJECTS COMPLETED')
+    pie_chart.add('Work Market', work_market_total)
+    pie_chart.add('Atlas', atlas_total)
+    pie_chart.add('BWIT', bwit_total)
+    pie_chart.add('CCS', ccs_total)
+    pie_chart.add('Techlink', techlink_total)
+    pie_chart.add('Field Nation', field_nation_total)
+    pie_chart.add('OnForce', on_force_total)
+    pie_chart.render_in_browser()
+    sizes = [work_market_total, atlas_total, bwit_total, ccs_total, field_nation_total, on_force_total, techlink_total]
+    explode = (0, 0.1, 0, 0, 0.1, 0, 0.1)  # only "explode" the 2nd slice (i.e. 'Hogs')
+    fig1, ax1 = plt.subplots()
+    ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
+    ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+    plt.show()
+
+
+# Generate  performance charts by state
+def state_performance():
+"""function to calculate performance total by state"""
+    global oregon_total
+    global washington_total
+    with open(contractor_log) as f:
+        for line in f:
+            oregon_state = line.find('OR')
+            washington_state = line.find('WA')
+            if oregon_state != -1 and oregon_state != 0:
+                oregon_total += 1
+            elif washington_state != -1 and washington_state != 0:
+                washington_total += 1
+    pie_chart = pygal.HorizontalBar(title=u'PROJECT PERFORMANCE BY STATE', x_title='COMPLETED PROJECTS', y_title='STATES')
+    pie_chart.add('Oregon', oregon_total)
+    pie_chart.add('Washington', washington_total)
+    pie_chart.render_in_browser()
+
+
+# Convert temp from celsius to fahrenheit
+def temp_conversion():
+    global leaving
+    global arriving
+    global air_miles
+    leaving = depart[0]['components']['city']
+    arriving = arrive[0]['components']['city']
+
+    # Will calculate distance between to point longitude and latitude
+
+    # Starting Coordinates
+    starting_latitude = radians(float(depart[0]['geometry']['lat']))
+    starting_longitude = radians(float(depart[0]['geometry']['lng']))
+    # Ending Coordinates
+    ending_latitude = radians(float(arrive[0]['geometry']['lat']))
+    ending_longitude = radians(float(arrive[0]['geometry']['lng']))
+
+    dist = 6371.01 * acos(sin(starting_latitude) * sin(ending_latitude)
+                          + cos(starting_latitude) * cos(ending_latitude) * cos(
+        starting_longitude - ending_longitude))
+
+    # converts kilometers to miles
+    air_miles = dist / 1.609344
+
+    # print("The distance is %.2fkm." % dist)
+
+
+# Get the location of departing address
+def departure_city():
+    global depart
+    global d_city_name
+    global latitude
+    global longitude
+    global desc
+    global period
+    global short_desc
+    # sign up for your API key at https://opencagedata.com
+    # geo_key = '0fe8c806c39e4f6490fc729e1c06c6bf'  # geo-location
+    print()
+    geocoder = OpenCageGeocode(geo_key)
+    depart = geocoder.geocode(d_city_name.value)
+    print(u'%f;%f;%s;%s;%s;%s;%s' % (depart[0]['geometry']['lat'],
+                                     depart[0]['geometry']['lng'],
+                                     depart[0]['components']['county'],
+                                     depart[0]['components']['city'],
+                                     depart[0]['components']['state'],
+                                     depart[0]['components']['country'],
+                                     depart[0]['annotations']['timezone']['short_name']))
+    latitude = depart[0]['geometry']['lat']
+    longitude = depart[0]['geometry']['lng']
+
+    # Variables
+    page = requests.get("http://forecast.weather.gov/MapClick.php?lat=" + str(latitude) + "&lon=" + str(longitude))
+    soup = BeautifulSoup(page.content, 'html.parser')
+    seven_day = soup.find(id="seven-day-forecast")
+    forecast_items = seven_day.find_all(class_="tombstone-container")
+    tonight = forecast_items[0]
+    img = tonight.find("img")
+    desc = img['title']
+    # print(tonight.prettify())
+    period = tonight.find(class_="period-name").get_text()
+    short_desc = tonight.find(class_="short-desc").get_text()
+    # temp = tonight.find(class_="temp").get_text()
+    period_tags = seven_day.select(".tombstone-container .period-name")
+    periods = [pt.get_text() for pt in period_tags]
+    # print(period_tags)
+
+    short_descs = [sd.get_text() for sd in seven_day.select(".tombstone-container .short-desc")]
+    # temps = [t.get_text() for t in seven_day.select(".tombstone-container .temp")]
+    descs = [d["title"] for d in seven_day.select(".tombstone-container img")]
+
+    print()
+    print("---------------------------------------------------")
+    print("                    7 DAY FORECAST                  ")
+    print("---------------------------------------------------")
+    weather = pd.DataFrame({
+        "period": periods,
+        "desc": descs,
+        "short_desc": short_descs
+    })
+    print(weather)
+
+
+# Location of arriving city
+def arrival_city():
+    global arrive
+    global a_city_name
+    global desc
+    global period
+    global short_desc
+    global a_latitude
+    global a_longitude
+    # key = '0fe8c806c39e4f6490fc729e1c06c6bf'
+    geocoder = OpenCageGeocode(geo_key)
+    arrive = geocoder.geocode(a_city_name)
+    print(u'%f;%f;%s;%s;%s;%s;%s' % (arrive[0]['geometry']['lat'],
+                                     arrive[0]['geometry']['lng'],
+                                     arrive[0]['components']['county'],
+                                     arrive[0]['components']['city'],
+                                     arrive[0]['components']['state'],
+                                     arrive[0]['components']['country'],
+                                     arrive[0]['annotations']['timezone']['short_name']))
+    a_latitude = arrive[0]['geometry']['lat']
+    a_longitude = arrive[0]['geometry']['lng']
+
+    # Variables
+    page = requests.get("http://forecast.weather.gov/MapClick.php?lat=" + str(a_latitude) + "&lon=" + str(a_longitude))
+    soup = BeautifulSoup(page.content, 'html.parser')
+    seven_day = soup.find(id="seven-day-forecast")
+    forecast_items = seven_day.find_all(class_="tombstone-container")
+    tonight = forecast_items[0]
+    img = tonight.find("img")
+    desc = img['title']
+    # print(tonight.prettify())
+    period = tonight.find(class_="period-name").get_text()
+    short_desc = tonight.find(class_="short-desc").get_text()
+    # temp = tonight.find(class_="temp").get_text()
+
+    period_tags = seven_day.select(".tombstone-container .period-name")
+    periods = [pt.get_text() for pt in period_tags]
+    # print(period_tags)
+
+    short_descs = [sd.get_text() for sd in seven_day.select(".tombstone-container .short-desc")]
+    # temps = [t.get_text() for t in seven_day.select(".tombstone-container .temp")]
+    descs = [d["title"] for d in seven_day.select(".tombstone-container img")]
+
+    print()
+    print("---------------------------------------------------")
+    print("                    7 DAY FORECAST                  ")
+    print("---------------------------------------------------")
+    a_weather = pd.DataFrame({
+        "period": periods,
+        "desc": descs,
+        "short_desc": short_descs
+    })
+    print(a_weather)
+
+
+# Display weather forecast of current city
+def weather_forecast():
+    global weather_description
+    global fahrenheit_temp
+    global current_humidity
+    global current_pressure
+    # base_url variable to store url
+    base_url = "http://api.openweathermap.org/data/2.5/weather?"
+
+    # Give city name
+    the_city_name = d_city_name.value
+
+    # complete_url variable to store
+    # complete url address
+    complete_url = base_url + "appid=" + weather_key + "&q=" + the_city_name
+
+    # get method of requests module
+    # return response object
+    response = requests.get(complete_url)
+
+    # json method of response object
+    # convert json format data into
+    # python format data
+    x = response.json()
+
+    # Now x contains list of nested dictionaries
+    # Check the value of "cod" key is equal to
+    # "404", means city is found otherwise,
+    # city is not found
+
+    if x["cod"] != "404":
+
+        # store the value of "main"
+        # key in variable y
+        y = x["main"]
+
+        # store the value corresponding
+        # to the "temp" key of y
+        current_temperature = y["temp"]
+
+        # store the value corresponding
+        # to the "pressure" key of y
+        current_pressure = y["pressure"]
+
+        # store the value corresponding
+        # to the "humidity" key of y
+        current_humidity = y["humidity"]
+
+        # store the value of "weather"
+        # key in variable z
+        z = x["weather"]
+
+        # store the value corresponding
+        # to the "description" key at
+        # the 0th index of z
+        weather_description = z[0]["description"]
+
+        # variables for temperature conversion
+        temp_float = float(current_temperature)
+        math_1 = temp_float - 273
+        math_2 = 9 / 5 * math_1
+        fahrenheit_temp = math_2 + 32
+
+        # print following values
+        print(" Temperature (in Fahrenheit) = " +
+              str(round(fahrenheit_temp, 2)) +
+              "\n atmospheric pressure (in hPa unit) = " +
+              str(current_pressure) +
+              "\n humidity (in percentage) = " +
+              str(current_humidity) +
+              "\n description = " +
+              str(weather_description))
+    else:
+        print(" City Not Found ")
+
+
+def open_window_1():
+    """Open window 1 function"""
+    window_1.show(wait=True)
+
+
+def close_window_1():
+    """Close window 1 function"""
+    window_1.hide()
+
+
+def open_window_2():
+    """Open window 2 function"""
+    window_2.show(wait=True)
+
+
+def close_window_2():
+    """Close window 2 function"""
+    window_2.hide()
+
+
+def open_window_3():
+    """Open window 3 function"""
+    window_3.show(wait=True)
+
+
+def close_window_3():
+    """Open window 3 function"""
+    window_3.hide()
+
+
+def open_window_4():
+    """Open window 4 function"""
+    window_4.show(wait=True)
+
+
+def close_window_4():
+    """Open window 4 function"""
+    window_4.hide()
+
+
+def exit_button():
+    """Function to exit application"""
+    exit()
+
+
+def calculate_miles():
+    """function to calculate mileage and travel cost"""
+    gallons = 33
+    mpg = 15
+    fill_up = int(gallons) * float(gasoline.value)
+    full_tank = int(mpg) * int(gallons)
+    tanks = int(miles.value) / int(full_tank)
+    fuel_per_trip = int(miles.value) / int(gallons)
+    fuel_cost = round(fuel_per_trip, 2) * float(gasoline.value)
+    total_cost = round(fill_up * tanks)
+    hours = int(miles.value) / int(speed.value)
+    minutes = round(hours, 2) * 60
+    days = int(hours) / 24
+    pay_for_travel = int(travel_rate.value) * int(hours)
+    if int(miles.value) >= 40:
+        mileage_window.show(wait=True)
+        Text(mileage_window, text="This Project in {0} is {1:.1f} hours away".format(travel_destination.value, hours))
+        Text(mileage_window, text="")
+        mileage_box = Box(mileage_window, align="top", width="fill")
+        fuel_form_box = Box(mileage_box, layout="grid", width="fill", align="left", border=True)
+
+        Text(fuel_form_box, grid=[0, 0], text="TRAVEL COMPENSATION:", align="left")
+        Text(fuel_form_box, grid=[1, 0], text="${0:.2f}".format(pay_for_travel), align="left")
+
+        Text(fuel_form_box, grid=[0, 1], text="FILL UP COST ", align="left")
+        Text(fuel_form_box, grid=[1, 1], text="${0:.2f}".format(fill_up), align="left")
+
+        Text(fuel_form_box, grid=[0, 2], text="GALLONS OF FUEL", align="left")
+        Text(fuel_form_box, grid=[1, 2], text="{0:.2f}".format(fuel_cost), align="left")
+
+        Text(fuel_form_box, grid=[0, 3], text="TRAVEL DISTANCE", align="left")
+        Text(fuel_form_box, grid=[1, 3], text="{0:.2f} miles on one tank".format(full_tank), align="left")
+
+        Text(fuel_form_box, grid=[0, 4], text="ONEWAY TRIP", align="left")
+        Text(fuel_form_box, grid=[1, 4], text="{0:.1f} tanks of fuel".format(tanks), align="left")
+
+        Text(fuel_form_box, grid=[0, 5], text="ROUND TRIP", align="left")
+        Text(fuel_form_box, grid=[1, 5], text="{0:.1f} tanks of fuel".format(tanks * 2), align="left")
+
+        Text(fuel_form_box, grid=[0, 6], text="ONEWAY COST", align="left")
+        Text(fuel_form_box, grid=[1, 6], text="${0:.2f}".format(total_cost), align="left")
+
+        Text(fuel_form_box, grid=[0, 7], text="ROUND TRIP COST", align="left")
+        Text(fuel_form_box, grid=[1, 7], text="${0:.2f}".format(total_cost * 2), align="left")
+
+        Text(fuel_form_box, grid=[0, 8], text="MINUTES", align="left")
+        Text(fuel_form_box, grid=[1, 8], text="{0:.1f}".format(minutes), align="left")
+
+        Text(fuel_form_box, grid=[0, 9], text="HOURS", align="left")
+        Text(fuel_form_box, grid=[1, 9], text="{0:.1f}".format(hours), align="left")
+
+        Text(fuel_form_box, grid=[0, 10], text="DAYS", align="left")
+        Text(fuel_form_box, grid=[1, 10], text="{0:.1f}".format(days), align="left")
+        PushButton(mileage_window, text="Close Window", command=mileage_window.hide)
+    else:
+        mileage_window.info("No Compensation",
+                            "The Project in {0} is in your Travel Zone".format(travel_destination.value))
+
+
+def project_performance():
+    """function to update performance log"""
+    global data_crawl
+    global count_row
+    platform = vendor_options.value
+    work_order = work_order_box.value
+    job_address = service_address_box.value
+    arrival_city_name = service_city_box.value
+    state_name = service_state.value
+    job_zip_code = city_zipcode_box.value
+    data = [[platform, timestamp, work_order, job_address, arrival_city_name, state_name, job_zip_code]]
+    df = pd.DataFrame(data, columns=['PLATFORM', 'DATE', 'WORK ORDER', 'ADDRESS', 'CITY', 'STATE', 'ZIP'])
+    if not os.path.isfile(contractor_log):
+        df.to_csv(contractor_log, header='column_names')
+    else:  # else it exists so append without writing the header
+        df.to_csv(contractor_log, mode='a', header=False)
+    window_1.info("Log Submission", "Work Order {0} has been submitted".format(work_order_box.value))
+
+
+# Main App Window BWIT APP
+app = App(title="BWIT App")
+company_logo = Picture(app, image="logo.gif")
+Text(app, text="")
+update_platform = PushButton(app, command=open_window_1, text="Update Service Log", width=20, height=1)
+Text(app, text="")
+mile_comp = PushButton(app, command=open_window_2, text="Mileage Compensation", width=20, height=1)
+Text(app, text="")
+weather_report = PushButton(app, command=open_window_3, text="Weather Report", width=20, height=1)
+Text(app, text="")
+charts = PushButton(app, command=open_window_4, text="Display Charts", width=20, height=1)
+Text(app, text="")
+quit_app = PushButton(app, command=exit_button, text="Quit Program", width=20)
+
+
+# Window 1 Platform Update
+window_1 = Window(app, title="Platform Update")
+window_1.hide()
+Box(window_1, align="left", )
+title_box = Box(window_1, width="fill", align="top", border=True)
+Text(title_box, text="Update Performance Log")
+window1_logo = Picture(window_1, image="logo.gif")
+content_box = Box(window_1, align="top", width="fill")
+form_box = Box(content_box, layout="grid", width="fill", align="left", border=True)
+Text(form_box, grid=[1, 0], text="", align="left")
+work_order_label = Text(form_box, grid=[0, 2], text="WORK ORDER", align="left")
+work_order_box = TextBox(form_box, grid=[1, 2], text="enter WO#", width="fill")
+
+service_address_label = Text(form_box, grid=[0, 3], text="SERVICE ADDRESS", align="left")
+service_address_box = TextBox(form_box, grid=[1, 3], text="enter address", width="fill")
+
+service_city_label = Text(form_box, grid=[0, 4], text="SERVICE CITY", align="left")
+service_city_box = TextBox(form_box, grid=[1, 4], text="enter city", width="fill")
+
+city_zipcode_label = Text(form_box, grid=[0, 5], text="POSTAL CODE", align="left")
+city_zipcode_box = TextBox(form_box, grid=[1, 5], text="enter zipcode", width="fill")
+combo_box = Box(window_1, width="fill")
+service_state = Combo(combo_box, options=["OR", "WA"], align="left")
+service_state_label = Text(combo_box, text="Select State", align="left")
+vendor_options = Combo(combo_box, options=["Atlas", "BWIT", "CCS", "Field_Nation", "Work_Market"], align="right")
+vendor_options_label = Text(combo_box, text="Select Vendor", align="right")
+buttons_box = Box(window_1, width="fill", align="bottom")
+Text(buttons_box, text="")
+cancel = PushButton(buttons_box, text="Cancel", align="right", command=close_window_1)
+ok = PushButton(buttons_box, text="Submit", align="right", command=project_performance)
+
+
+# Window 2 Mileage Compensation
+window_2 = Window(app, title="Mileage Compensation")
+window_2.hide()
+title_box = Box(window_2, width="fill", align="top", border=True)
+Text(title_box, text="Calculate Mileage")
+window2_logo = Picture(window_2, image="beawit_logo_blue.gif")
+content_box_2 = Box(window_2, align="top", width="fill")
+form_box = Box(content_box_2, layout="grid", width="fill", align="left", border=True)
+Text(form_box, grid=[1, 0], text="", align="left")
+travel_destination_label = Text(form_box, grid=[0, 2], text="DESTINATION CITY", align="left")
+travel_destination = TextBox(form_box, grid=[1, 2], text="enter city", width="fill")
+
+miles_label = Text(form_box, grid=[0, 3], text="MILES TO PROJECT", align="left")
+miles = TextBox(form_box, grid=[1, 3], text="enter miles", width="fill")
+
+gasoline_label = Text(form_box, grid=[0, 4], text="PRICE OF GAS", align="left")
+gasoline = TextBox(form_box, grid=[1, 4], text="enter fuel price", width="fill")
+
+speed_label = Text(form_box, grid=[0, 5], text="TRAVEL SPEED", align="left")
+speed = TextBox(form_box, grid=[1, 5], text="enter speed", width="fill")
+
+travel_rate_label = Text(form_box, grid=[0, 6], text="TRAVEL RATE", align="left")
+travel_rate = TextBox(form_box, grid=[1, 6], text="enter hourly rate", width="fill")
+
+travel_buttons_box = Box(window_2, width="fill", align="bottom")
+Text(travel_buttons_box, text="")
+mileage_cancel = PushButton(travel_buttons_box, text="Cancel", align="right", command=close_window_2)
+mileage_calculate = PushButton(travel_buttons_box, text="Submit", align="right", command=calculate_miles)
+
+
+# Mileage Results Window
+mileage_window = Window(app, title="Compensation Results")
+mileage_window_logo = Picture(mileage_window, image="beawit_logo_blue.gif", align="top")
+mileage_window.hide()
+
+
+# Window 3 Get Weather Report
+window_3 = Window(app, title="Weather Forecast")
+window_3.hide()
+forecast_window_logo = Picture(window_3, image="beawit_logo_blue.gif", align="top")
+weather_box = Box(window_3, layout="grid", width="fill", align="top", border=True)
+Text(weather_box, grid=[1, 0], text="", align="left")
+d_city_name = Text(weather_box, grid=[0, 2], text="CURRENT CITY", align="left")
+TextBox(weather_box, grid=[1, 2], text="enter current city", width="fill")
+weather_buttons_box = Box(window_3, width="fill", align="bottom")
+weather_cancel = PushButton(weather_buttons_box, text="Cancel", align="right", command=close_window_3)
+get_forecast = PushButton(weather_buttons_box, text="Submit", align="right", command=weather_forecast)
+
+
+# Forecast Results Window
+forecast_window = Window(app, title="Forecast Results")
+forecast_window_logo_results = Picture(forecast_window, image="logo.gif", align="top")
+forecast_window.hide()
+
+
+# Window 4 Display Charts
+window_4 = Window(app, title="View Graphs")
+window_4.hide()
+window_4_logo = Picture(window_4, image="logo.gif")
+Text(window_4, text="Choose One")
+perf_by_month = PushButton(window_4, command=monthly_performance, text="Performance by Month", width=20, height=1)
+Text(window_4, text="")
+perf_by_state = PushButton(window_4, command=state_performance, text="Performance by State", width=20, height=1)
+Text(window_4, text="")
+perf_by_vendor = PushButton(window_4, command=vendor_performance, text="Performance by Vendor", width=20, height=1)
+Text(window_4, text="")
+perf_by_year = PushButton(window_4, command=yearly_performance, text="Performance by Year", width=20, height=1)
+Text(window_4, text="")
+cancel_window_4 = PushButton(window_4, command=close_window_4, text="Close", width=20)
+
+app.display()
